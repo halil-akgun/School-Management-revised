@@ -49,6 +49,8 @@ public class Messages {
 
 
     public static final String MEET_CONFLICT_MESSAGE = "Error: There is a conflict regarding the meeting time.";
+    public static final String MEET_CONFLICT_MESSAGE_WITH_ID =
+            "Error: There is a conflict regarding the meeting time of the students with these ids: %s";
     public static final String MEET_NOT_FOUND_MESSAGE = "Error: Meet with id %d not found";
 
 

@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,13 +46,20 @@ public class MeetService {
             throw new BadRequestException(Messages.TIME_NOT_VALID_MESSAGE);
 
 //        meet conflict control for each students
+        List<Long> studentIds = new ArrayList<>(); // _zZ ***+*** ADDED ***
         for (Long studentId : request.getStudentIds()) {
             if (!studentRepository.existsById(studentId))
                 throw new ResourceNotFoundException(String.format(Messages.NOT_FOUND_USER2_MESSAGE, studentId));
 
             List<Meet> meets = meetRepository.findByStudentList_IdEquals(studentId); // _zZ ***+*** ADDED ***
-            checkMeetConflict(meets, request.getDate(), request.getStartTime(), request.getStopTime());
+            try {  // _zZ ***+*** ADDED try/catch ***
+                checkMeetConflict(meets, request.getDate(), request.getStartTime(), request.getStopTime());
+            } catch (ConflictException e) {
+                studentIds.add(studentId);
+            }
         }
+        if (!studentIds.isEmpty()) // _zZ ***+*** ADDED ***
+            throw new ConflictException(String.format(Messages.MEET_CONFLICT_MESSAGE_WITH_ID, studentIds));
 
 //        meet conflict control for teacher
         List<Meet> meets = meetRepository.getByAdvisorTeacher_IdEquals(advisorTeacher.getId()); // _zZ ***+*** ADDED ***
@@ -157,10 +165,18 @@ public class MeetService {
                 oldMeet.getStartTime().equals(request.getStartTime()) &&
                 oldMeet.getStopTime().equals(request.getStopTime()))) {
 //        meet conflict control for each student
+            List<Long> studentIds = new ArrayList<>(); // _zZ ***+*** ADDED ***
             for (Long studentId : request.getStudentIds()) {
                 List<Meet> meets = meetRepository.findByStudentList_IdEquals(studentId); // _zZ ***+*** ADDED ***
-                checkMeetConflict(meets, request.getDate(), request.getStartTime(), request.getStopTime());
+                try {  // _zZ ***+*** ADDED try/catch ***
+                    checkMeetConflict(meets, request.getDate(), request.getStartTime(), request.getStopTime());
+                } catch (ConflictException e) {
+                    studentIds.add(studentId);
+                }
             }
+            if (!studentIds.isEmpty()) // _zZ ***+*** ADDED ***
+                throw new ConflictException(String.format(Messages.MEET_CONFLICT_MESSAGE_WITH_ID, studentIds));
+
 //        meet conflict control for teacher
             List<Meet> meets = meetRepository.getByAdvisorTeacher_IdEquals(oldMeet.getAdvisorTeacher().getId()); // _zZ ***+*** ADDED ***
             checkMeetConflict(meets, request.getDate(), request.getStartTime(), request.getStopTime()); // _zZ ***+*** ADDED ***
