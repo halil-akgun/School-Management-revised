@@ -48,7 +48,7 @@ public class Messages {
     public static final String STUDENT_INFO_NOT_FOUND_BY_STUDENT_ID = "Error: Student Info with  student id %d not found";
 
 
-    public static final String MEET_EXIST_MESSAGE = "Error: Meet not found";
+    public static final String MEET_CONFLICT_MESSAGE = "Error: There is a conflict regarding the meeting time.";
     public static final String MEET_NOT_FOUND_MESSAGE = "Error: Meet with id %d not found";
 
 

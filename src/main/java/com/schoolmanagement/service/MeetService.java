@@ -44,12 +44,18 @@ public class MeetService {
         if (TimeControl.check(request.getStartTime(), request.getStopTime()))
             throw new BadRequestException(Messages.TIME_NOT_VALID_MESSAGE);
 
+//        meet conflict control for each students
         for (Long studentId : request.getStudentIds()) {
             if (!studentRepository.existsById(studentId))
                 throw new ResourceNotFoundException(String.format(Messages.NOT_FOUND_USER2_MESSAGE, studentId));
 
-            checkMeetConflict(studentId, request.getDate(), request.getStartTime(), request.getStopTime());
+            List<Meet> meets = meetRepository.findByStudentList_IdEquals(studentId); // _zZ ***+*** ADDED ***
+            checkMeetConflict(meets, request.getDate(), request.getStartTime(), request.getStopTime());
         }
+
+//        meet conflict control for teacher
+        List<Meet> meets = meetRepository.getByAdvisorTeacher_IdEquals(advisorTeacher.getId()); // _zZ ***+*** ADDED ***
+        checkMeetConflict(meets, request.getDate(), request.getStartTime(), request.getStopTime()); // _zZ ***+*** ADDED ***
 
         List<Student> students = studentService.getStudentByIds(request.getStudentIds());
 
@@ -69,8 +75,8 @@ public class MeetService {
                 .object(createMeetResponse(savedMeet)).build();
     }
 
-    private void checkMeetConflict(Long studentId, LocalDate date, LocalTime startTime, LocalTime stopTime) {
-        List<Meet> meets = meetRepository.findByStudentList_IdEquals(studentId);
+    private void checkMeetConflict(List<Meet> meets, LocalDate date, LocalTime startTime, LocalTime stopTime) {
+//        List<Meet> meets = meetRepository.findByStudentList_IdEquals(studentId); // _zZ ***+*** CANCELED ***
         for (Meet meet : meets) {
             LocalTime existingStartTime = meet.getStartTime();
             LocalTime existingStopTime = meet.getStopTime();
@@ -80,7 +86,7 @@ public class MeetService {
                             (stopTime.isAfter(existingStartTime) && stopTime.isBefore(existingStopTime)) ||
                             (startTime.isBefore(existingStartTime) && stopTime.isAfter(existingStopTime)) ||
                             (startTime.equals(existingStartTime) && stopTime.equals(existingStopTime))))
-                throw new ConflictException(Messages.MEET_EXIST_MESSAGE);
+                throw new ConflictException(Messages.MEET_CONFLICT_MESSAGE);
         }
     }
 
@@ -145,14 +151,19 @@ public class MeetService {
         if (TimeControl.check(request.getStartTime(), request.getStopTime()))
             throw new BadRequestException(Messages.TIME_NOT_VALID_MESSAGE);
 
-//        her ogrenci icin meet conflict kontrolu
-        // !!! if in icinde request den gelen meet ile orjinal meet objesinde date,startTime ve stoptime
-        // bilgilerinde degisiklik yapildiysa checkMeetConflict metoduna girmesi saglaniyor
+        // !!! If the date, startTime and stoptime information of the original meet object has been changed
+        // with the meet from the request, it is entered into the checkMeetConflict method.
         if (!(oldMeet.getDate().equals(request.getDate()) &&
                 oldMeet.getStartTime().equals(request.getStartTime()) &&
                 oldMeet.getStopTime().equals(request.getStopTime()))) {
-            for (Long studentId : request.getStudentIds())
-                checkMeetConflict(studentId, request.getDate(), request.getStartTime(), request.getStopTime());
+//        meet conflict control for each student
+            for (Long studentId : request.getStudentIds()) {
+                List<Meet> meets = meetRepository.findByStudentList_IdEquals(studentId); // _zZ ***+*** ADDED ***
+                checkMeetConflict(meets, request.getDate(), request.getStartTime(), request.getStopTime());
+            }
+//        meet conflict control for teacher
+            List<Meet> meets = meetRepository.getByAdvisorTeacher_IdEquals(oldMeet.getAdvisorTeacher().getId()); // _zZ ***+*** ADDED ***
+            checkMeetConflict(meets, request.getDate(), request.getStartTime(), request.getStopTime()); // _zZ ***+*** ADDED ***
         }
 
         List<Student> students = studentService.getStudentByIds(request.getStudentIds());
