@@ -64,39 +64,51 @@ public class ContactMessageService {
     }
 
     // ********************** getAll() **********************
-    public Page<ContactMessageResponse> getAll(int page, int size, String sort, String type) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending()); // ascending: default
-//                                   type'i default olarak ascending yaptik if'te desc mi diye kontrol edilecek
+    public Page<ContactMessageResponse> getAll(int page, int size, String sort, Sort.Direction type) {
 
-        if (Objects.equals(type, "desc")) {
-//            type "desc" ise pageable asagidaki gibi guncellenecek
-            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
-        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(type, sort)); // _zZ ***+*** ADDED ***
+
+        // _zZ ***+*** CANCELED *** :
+//        Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending()); // ascending: default
+////                                   type'i default olarak ascending yaptik if'te desc mi diye kontrol edilecek
+//
+//        if (Objects.equals(type, "desc")) {
+////            type "desc" ise pageable asagidaki gibi guncellenecek
+//            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
+//        }
 
 //        return contactMessageRepository.findAll(pageable).map(t-> createResponse(t));
         return contactMessageRepository.findAll(pageable).map(this::createResponse); // kisa hali
     }
 
     // ********************** searchByEmail() **********************
-    public Page<ContactMessageResponse> searchByEmail(String email, int page, int size, String sort, String type) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
+    public Page<ContactMessageResponse> searchByEmail(String email, int page, int size, String sort, Sort.Direction type) {
 
-        if (Objects.equals(type, "desc")) {
-            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
-        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(type, sort)); // _zZ ***+*** ADDED ***
+
+        // _zZ ***+*** CANCELED *** :
+//        Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
+//
+//        if (Objects.equals(type, "desc")) {
+//            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
+//        }
 
         return contactMessageRepository.findByEmailEquals(email, pageable).map(this::createResponse);
     }
 
     // ********************** searchBySubject() **********************
-    public Page<ContactMessageResponse> searchBySubject(String subject, int page, int size, String sort, String type) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
+    public Page<ContactMessageResponse> searchBySubject(String subject, int page, int size, String sort, Sort.Direction type) {
 
-        if (Objects.equals(type, "desc")) {
-            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
-        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(type, sort)); // _zZ ***+*** ADDED ***
 
-        return contactMessageRepository.findBySubjectEquals(subject,pageable).map(this::createResponse);
+        // _zZ ***+*** CANCELED *** :
+//        Pageable pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
+//
+//        if (Objects.equals(type, "desc")) {
+//            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
+//        }
+
+        return contactMessageRepository.findBySubjectEquals(subject, pageable).map(this::createResponse);
 //        contactMessageRepository.findBySubjectLikeIgnoreCase("%" + subject + "%", pageable)
     }
 }

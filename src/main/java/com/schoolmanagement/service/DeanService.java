@@ -146,11 +146,13 @@ public class DeanService {
         return deanRepository.findAll().stream().map(this::createDeanResponse).collect(Collectors.toList());
     }
 
-    public Page<DeanResponse> search(int page, int size, String sort, String type) {
-        Pageable pageable;
-        if (Objects.equals(type, "desc"))
-            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
-        else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
+    public Page<DeanResponse> search(int page, int size, String sort, Sort.Direction type) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(type, sort)); // _zZ ***+*** ADDED ***
+
+//        if (Objects.equals(type, "desc")) { // _zZ ***+*** CANCELED ***
+//            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
+//        } else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
         return deanRepository.findAll(pageable).map(this::createDeanResponse);
     }

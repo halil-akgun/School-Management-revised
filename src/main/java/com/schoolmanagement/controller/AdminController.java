@@ -39,13 +39,13 @@ public class AdminController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", defaultValue = "name") String sort,
-            @RequestParam(value = "type", defaultValue = "desc") String type
+            @RequestParam(value = "type", defaultValue = "DESC") Sort.Direction type
     ) {
-        Pageable pageable;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(type, sort)); // _zZ ***+*** ADDED ***
 
-        if (Objects.equals(type, "desc")) {
-            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
-        } else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
+//        if (Objects.equals(type, "desc")) { // _zZ ***+*** CANCELED ***
+//            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
+//        } else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
         Page<Admin> author = adminService.getAllAdmin(pageable);
 

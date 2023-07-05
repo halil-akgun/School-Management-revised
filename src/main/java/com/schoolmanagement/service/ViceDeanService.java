@@ -144,12 +144,13 @@ public class ViceDeanService {
                 .collect(Collectors.toList());
     }
 
-    public Page<ViceDeanResponse> getAllWithPage(int page, int size, String sort, String type) {
+    public Page<ViceDeanResponse> getAllWithPage(int page, int size, String sort, Sort.Direction type) {
 
-        Pageable pageable;
-        if (Objects.equals(type, "desc"))
-            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
-        else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(type, sort)); // _zZ ***+*** ADDED ***
+
+//        if (Objects.equals(type, "desc")) { // _zZ ***+*** CANCELED ***
+//            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
+//        } else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
         return viceDeanRepository.findAll(pageable).map(this::createViceDeanResponse);
     }

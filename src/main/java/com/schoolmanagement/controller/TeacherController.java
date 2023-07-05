@@ -7,6 +7,7 @@ import com.schoolmanagement.payload.response.TeacherResponse;
 import com.schoolmanagement.service.TeacherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,7 +64,7 @@ public class TeacherController {
             @RequestParam(value = "page") int page,
             @RequestParam(value = "size") int size,
             @RequestParam(value = "sort") String sort,
-            @RequestParam(value = "type") String type
+            @RequestParam(value = "type") Sort.Direction type
     ) {
         return teacherService.getAllWithPage(page, size, sort, type);
     }

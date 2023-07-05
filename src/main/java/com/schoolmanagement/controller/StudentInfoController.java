@@ -111,7 +111,7 @@ public class StudentInfoController {
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size,
             @RequestParam(name = "sort", defaultValue = "id") String sort,
-            @RequestParam(name = "type", defaultValue = "desc") Sort.Direction type
+            @RequestParam(name = "type", defaultValue = "DESC") Sort.Direction type
     ) {
         return studentInfoService.getAllWithPage(page, size, sort, type);
     }

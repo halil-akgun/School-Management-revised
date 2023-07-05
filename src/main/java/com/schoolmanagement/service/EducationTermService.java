@@ -90,11 +90,13 @@ public class EducationTermService {
                 .stream().map(this::createEducationTermResponse).collect(Collectors.toList());
     }
 
-    public Page<EducationTermResponse> getAllWithPage(int page, int size, String sort, String type) {
-        Pageable pageable;
-        if (Objects.equals(type, "desc"))
-            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
-        else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
+    public Page<EducationTermResponse> getAllWithPage(int page, int size, String sort, Sort.Direction type) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(type, sort)); // _zZ ***+*** ADDED ***
+
+//        if (Objects.equals(type, "desc")) { // _zZ ***+*** CANCELED ***
+//            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
+//        } else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
         return educationTermRepository.findAll(pageable).map(this::createEducationTermResponse);
     }
