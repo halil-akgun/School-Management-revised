@@ -2,16 +2,19 @@ package com.schoolmanagement.service;
 
 import com.schoolmanagement.entity.concretes.*;
 import com.schoolmanagement.exception.BadRequestException;
+import com.schoolmanagement.exception.ConflictException;
 import com.schoolmanagement.exception.ResourceNotFoundException;
 import com.schoolmanagement.payload.dto.LessonProgramDto;
 import com.schoolmanagement.payload.request.LessonProgramRequest;
 import com.schoolmanagement.payload.request.LessonProgramRequestForUpdate;
+import com.schoolmanagement.payload.request.StudentRequest;
 import com.schoolmanagement.payload.response.LessonProgramResponse;
 import com.schoolmanagement.payload.response.ResponseMessage;
 import com.schoolmanagement.payload.response.TeacherResponse;
 import com.schoolmanagement.repository.LessonProgramRepository;
 import com.schoolmanagement.repository.StudentRepository;
 import com.schoolmanagement.repository.TeacherRepository;
+import com.schoolmanagement.utils.CheckSameLessonProgram;
 import com.schoolmanagement.utils.CreateResponseObjectForService;
 import com.schoolmanagement.utils.Messages;
 import com.schoolmanagement.utils.TimeControl;
@@ -23,9 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -219,15 +220,45 @@ public class LessonProgramService {
         else if (TimeControl.check(request.getStartTime(), request.getStopTime()))
             throw new BadRequestException(Messages.TIME_NOT_VALID_MESSAGE);
 
+        Set<LessonProgram> lessonProgramRequest = createSetLessonProgramRequest(request); // for CheckSameLessonProgram
+        List<Long> idList = new ArrayList<>(); // _zZ ***+*** ADDED *** - for CheckSameLessonProgram
+
 //        ogrenci bilgilerini guncelleme
         if (request.getStudentIdList() != null && !request.getStudentIdList().isEmpty()) {
             Set<Student> students = studentRepository.findByIdsEquals(request.getStudentIdList());
+
+            for (Student student : students) {  // _zZ ***+*** ADDED ***
+                try {
+                    Set<LessonProgram> lessonProgramsThatWillNotBeUpdated = student.getLessonsProgramList()
+                            .stream().filter(t -> !Objects.equals(t.getId(), id)).collect(Collectors.toSet());
+                    CheckSameLessonProgram.checkLessonProgram(lessonProgramsThatWillNotBeUpdated, lessonProgramRequest);
+                } catch (BadRequestException e) {
+                    idList.add(student.getId());
+                }
+            }
+            if (!idList.isEmpty()) // _zZ ***+*** ADDED ***
+                throw new ConflictException(String.format(Messages.LESSON_PROGRAM_CONFLICT_MESSAGE_WITH_ID_FOR_STUDENT, idList));
+
             lessonProgram.setStudents(students);
         }
+
 
 //        ogretmen bilgilerini guncelleme
         if (request.getTeacherIdList() != null && !request.getTeacherIdList().isEmpty()) {
             Set<Teacher> teachers = teacherRepository.findByIdsEquals(request.getTeacherIdList());
+
+            for (Teacher teacher : teachers) {  // _zZ ***+*** ADDED ***
+                try {
+                    Set<LessonProgram> lessonProgramsThatWillNotBeUpdated = teacher.getLessonsProgramList()
+                            .stream().filter(t -> !Objects.equals(t.getId(), id)).collect(Collectors.toSet());
+                    CheckSameLessonProgram.checkLessonProgram(lessonProgramsThatWillNotBeUpdated, lessonProgramRequest);
+                } catch (BadRequestException e) {
+                    idList.add(teacher.getId());
+                }
+            }
+            if (!idList.isEmpty()) // _zZ ***+*** ADDED ***
+                throw new ConflictException(String.format(Messages.LESSON_PROGRAM_CONFLICT_MESSAGE_WITH_ID_FOR_TEACHER, idList));
+
             lessonProgram.setTeachers(teachers);
         }
 
@@ -239,10 +270,53 @@ public class LessonProgramService {
 
         LessonProgram savedLessonProgram = lessonProgramRepository.save(lessonProgram);
 
+        if (request.getStudentIdList() != null && !request.getStudentIdList().isEmpty()) {
+            Set<Student> students = studentRepository.findByIdsEquals(request.getStudentIdList());
+            for (Student student : students) {
+                updateStudentForLessonProgram(student, savedLessonProgram);
+            }
+        }
+
+
+        if (request.getTeacherIdList() != null && !request.getTeacherIdList().isEmpty()) {
+            Set<Teacher> teachers = teacherRepository.findByIdsEquals(request.getTeacherIdList());
+            for (Teacher teacher : teachers) {
+                updateTeacherForLessonProgram(teacher, savedLessonProgram);
+            }
+        }
+
         return ResponseMessage.<LessonProgramResponse>builder()
                 .message("LessonProgram updated Successfully")
                 .httpStatus(HttpStatus.OK)
                 .object(createLessonProgramResponse(savedLessonProgram))
                 .build();
+    }
+
+    private StudentRequest createStudentRequest(Student student) {
+        return null;
+    }
+
+    private Set<LessonProgram> createSetLessonProgramRequest(LessonProgramRequestForUpdate request) {
+        LessonProgram lessonProgram = LessonProgram.builder()
+                .day(request.getDay()).startTime(request.getStartTime()).build();
+        Set<LessonProgram> set = new HashSet<>();
+        set.add(lessonProgram);
+        return set;
+    }
+
+    void updateStudentForLessonProgram(Student student, LessonProgram lessonProgram) {
+        Set<LessonProgram> lessonPrograms = student.getLessonsProgramList();
+        if (lessonPrograms.stream().noneMatch(t -> Objects.equals(t.getId(), lessonProgram.getId())))
+            lessonPrograms.add(lessonProgram);
+        student.setLessonsProgramList(lessonPrograms);
+        studentRepository.save(student);
+    }
+
+    void updateTeacherForLessonProgram(Teacher teacher, LessonProgram lessonProgram) {
+        Set<LessonProgram> lessonPrograms = teacher.getLessonsProgramList();
+        if (lessonPrograms.stream().noneMatch(t -> Objects.equals(t.getId(), lessonProgram.getId())))
+            lessonPrograms.add(lessonProgram);
+        teacher.setLessonsProgramList(lessonPrograms);
+        teacherRepository.save(teacher);
     }
 }

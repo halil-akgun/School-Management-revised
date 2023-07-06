@@ -38,7 +38,11 @@ public class Messages {
     public static final String LESSON_PROGRAM_NOT_FOUND_MESSAGE = "Error: Lesson Program not found";
     public static final String LESSON_PROGRAM_EXIST_MESSAGE =
             "Error: Course schedule can not be selected fir the same hour and date";
+    public static final String LESSON_PROGRAM_CONFLICT_MESSAGE_WITH_ID_FOR_STUDENT =
+            "Error: There is a conflict regarding the Lesson Program of the students with these ids: %s";
 
+    public static final String LESSON_PROGRAM_CONFLICT_MESSAGE_WITH_ID_FOR_TEACHER =
+            "Error: There is a conflict regarding the Lesson Program of the teachers with these ids: %s";
 
     public static final String NOT_FOUND_ADVISOR_MESSAGE = "Error: Advisor Teacher with id %s not found";
     public static final String NOT_FOUND_ADVISOR_MESSAGE_WITH_USERNAME = "Error: Advisor Teacher with username %s not found";
@@ -48,9 +52,9 @@ public class Messages {
     public static final String STUDENT_INFO_NOT_FOUND_BY_STUDENT_ID = "Error: Student Info with  student id %d not found";
 
 
-    public static final String MEET_CONFLICT_MESSAGE = "Error: There is a conflict regarding the meeting time.";
+    public static final String MEET_CONFLICT_MESSAGE = "Error: There is a conflict regarding the Meeting time.";
     public static final String MEET_CONFLICT_MESSAGE_WITH_ID =
-            "Error: There is a conflict regarding the meeting time of the students with these ids: %s";
+            "Error: There is a conflict regarding the Meeting time of the students with these ids: %s";
     public static final String MEET_NOT_FOUND_MESSAGE = "Error: Meet with id %d not found";
 
 

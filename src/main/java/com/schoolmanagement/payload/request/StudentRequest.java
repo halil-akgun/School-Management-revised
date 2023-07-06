@@ -1,5 +1,6 @@
 package com.schoolmanagement.payload.request;
 
+import com.schoolmanagement.entity.concretes.LessonProgram;
 import com.schoolmanagement.payload.request.abstracts.BaseUserRequest;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

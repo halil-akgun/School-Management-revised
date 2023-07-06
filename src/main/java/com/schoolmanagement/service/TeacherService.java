@@ -1,6 +1,7 @@
 package com.schoolmanagement.service;
 
 import com.schoolmanagement.entity.concretes.LessonProgram;
+import com.schoolmanagement.entity.concretes.Student;
 import com.schoolmanagement.entity.concretes.Teacher;
 import com.schoolmanagement.entity.enums.RoleType;
 import com.schoolmanagement.exception.BadRequestException;
