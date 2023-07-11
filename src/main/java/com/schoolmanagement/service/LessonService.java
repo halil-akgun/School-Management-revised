@@ -7,6 +7,7 @@ import com.schoolmanagement.payload.request.LessonRequest;
 import com.schoolmanagement.payload.response.LessonResponse;
 import com.schoolmanagement.payload.response.ResponseMessage;
 import com.schoolmanagement.repository.LessonRepository;
+import com.schoolmanagement.utils.Mapper;
 import com.schoolmanagement.utils.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -33,32 +34,16 @@ public class LessonService {
             throw new ConflictException(String.format(Messages.
                     ALREADY_REGISTER_LESSON_MESSAGE, request.getLessonName()));
 
-        Lesson lesson = createLesson(request);
+        Lesson lesson = Mapper.lessonFromLessonRequest(request);
 
         return ResponseMessage.<LessonResponse>builder()
-                .object(createLessonResponse(lessonRepository.save(lesson)))
+                .object(Mapper.lessonResponseFromLesson(lessonRepository.save(lesson)))
                 .message("Lesson created successfully.")
                 .httpStatus(HttpStatus.CREATED).build();
     }
 
     private boolean existsLessonByLessonName(String lessonName) {
         return lessonRepository.existsLessonByLessonNameEqualsIgnoreCase(lessonName);
-    }
-
-    private Lesson createLesson(LessonRequest request) {
-        return Lesson.builder()
-                .lessonName(request.getLessonName())
-                .creditScore(request.getCreditScore())
-                .isCompulsory(request.getIsCompulsory()).build();
-    }
-
-    private LessonResponse createLessonResponse(Lesson lesson) {
-        return LessonResponse.builder()
-                .lessonName(lesson.getLessonName())
-                .lessonId(lesson.getLessonId())
-                .creditScore(lesson.getCreditScore())
-                .isCompulsory(lesson.getIsCompulsory())
-                .build();
     }
 
     public ResponseMessage delete(Long id) {
@@ -80,12 +65,12 @@ public class LessonService {
 
         return ResponseMessage.<LessonResponse>builder()
                 .message("Lesson found.")
-                .object(createLessonResponse(lesson)).build();
+                .object(Mapper.lessonResponseFromLesson(lesson)).build();
     }
 
     public List<LessonResponse> getAll() {
 
-        return lessonRepository.findAll().stream().map(this::createLessonResponse).collect(Collectors.toList());
+        return lessonRepository.findAll().stream().map(Mapper::lessonResponseFromLesson).collect(Collectors.toList());
     }
 
     public Page<LessonResponse> getAllWithPage(int page, int size, String sort, Sort.Direction type) {
@@ -96,20 +81,12 @@ public class LessonService {
 //            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
 //        } else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
-        return lessonRepository.findAll(pageable).map(this::createLessonResponse);
+        return lessonRepository.findAll(pageable).map(Mapper::lessonResponseFromLesson);
     }
 
     public Set<LessonResponse> getLessonByIdList(Set<Long> idList) {
         return lessonRepository.getLessonByLessonIdList(idList).stream()
-                .map(this::createLessonResponse).collect(Collectors.toSet());
-    }
-
-    public Lesson createLessonFromLessonResponse(LessonResponse response) {
-        return Lesson.builder()
-                .isCompulsory(response.isCompulsory())
-                .creditScore(response.getCreditScore())
-                .lessonName(response.getLessonName())
-                .lessonId(response.getLessonId()).build();
+                .map(Mapper::lessonResponseFromLesson).collect(Collectors.toSet());
     }
 
     //      StudentInfoService icin yazildi

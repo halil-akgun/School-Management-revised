@@ -10,6 +10,7 @@ import com.schoolmanagement.payload.response.ViceDeanResponse;
 import com.schoolmanagement.repository.ViceDeanRepository;
 import com.schoolmanagement.utils.CheckParameterUpdateMethod;
 import com.schoolmanagement.utils.FieldControl;
+import com.schoolmanagement.utils.Mapper;
 import com.schoolmanagement.utils.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -50,27 +51,13 @@ public class ViceDeanService {
         return ResponseMessage.<ViceDeanResponse>builder()
                 .message("ViceDean saved.")
                 .httpStatus(HttpStatus.CREATED)
-                .object(createViceDeanResponse(viceDean)).build();
+                .object(Mapper.viceDeanResponseFromViceDean(viceDean)).build();
 
     }
 
     private ViceDean createPojoFromDto(ViceDeanRequest request) {
 
         return viceDeanDto.fromDtoToViceDean(request);
-    }
-
-    private ViceDeanResponse createViceDeanResponse(ViceDean viceDean) {
-        return ViceDeanResponse.builder()
-                .name(viceDean.getName())
-                .userId(viceDean.getId())
-                .username(viceDean.getUsername())
-                .surname(viceDean.getSurname())
-                .birthPlace(viceDean.getBirthPlace())
-                .birthday(viceDean.getBirthday())
-                .phoneNumber(viceDean.getPhoneNumber())
-                .gender(viceDean.getGender())
-                .ssn(viceDean.getSsn())
-                .build();
     }
 
     public ResponseMessage<ViceDeanResponse> update(ViceDeanRequest request, Long id) {
@@ -82,7 +69,7 @@ public class ViceDeanService {
         else if (!CheckParameterUpdateMethod.checkParameter(viceDean.get(), request)) {
             fieldControl.checkDuplicate(request.getUsername(), request.getSsn(), request.getPhoneNumber());
         }
-        ViceDean updatedData = createUpdatedViceDean(request, id);
+        ViceDean updatedData = Mapper.viceDeanFromViceDeanRequest(request, id);
         updatedData.setPassword(passwordEncoder.encode(request.getPassword()));
         updatedData.setUserRole(userRoleService.getUserRole(RoleType.ASSISTANT_MANAGER));
 
@@ -91,23 +78,9 @@ public class ViceDeanService {
         return ResponseMessage.<ViceDeanResponse>builder()
                 .message("ViceDean updated.")
                 .httpStatus(HttpStatus.CREATED)
-                .object(createViceDeanResponse(updatedData))
+                .object(Mapper.viceDeanResponseFromViceDean(updatedData))
                 .build();
 
-    }
-
-    private ViceDean createUpdatedViceDean(ViceDeanRequest request, Long id) {
-        return ViceDean.builder()
-                .id(id)
-                .name(request.getName())
-                .surname(request.getSurname())
-                .ssn(request.getSsn())
-                .username(request.getUsername())
-                .phoneNumber(request.getPhoneNumber())
-                .birthPlace(request.getBirthPlace())
-                .birthday(request.getBirthDay())
-                .gender(request.getGender())
-                .build();
     }
 
     public ResponseMessage<?> deleteViceDean(Long id) {
@@ -134,13 +107,13 @@ public class ViceDeanService {
         return ResponseMessage.<ViceDeanResponse>builder()
                 .message("ViceDean found")
                 .httpStatus(HttpStatus.OK)
-                .object(createViceDeanResponse(viceDean.get())).build();
+                .object(Mapper.viceDeanResponseFromViceDean(viceDean.get())).build();
     }
 
     public List<ViceDeanResponse> getAllViceDean() {
         return viceDeanRepository.findAll()
                 .stream()
-                .map(this::createViceDeanResponse)
+                .map(Mapper::viceDeanResponseFromViceDean)
                 .collect(Collectors.toList());
     }
 
@@ -152,6 +125,6 @@ public class ViceDeanService {
 //            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
 //        } else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
-        return viceDeanRepository.findAll(pageable).map(this::createViceDeanResponse);
+        return viceDeanRepository.findAll(pageable).map(Mapper::viceDeanResponseFromViceDean);
     }
 }

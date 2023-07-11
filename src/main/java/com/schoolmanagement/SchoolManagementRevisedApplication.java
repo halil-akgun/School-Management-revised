@@ -17,7 +17,6 @@ import java.time.LocalDate;
 public class SchoolManagementRevisedApplication implements CommandLineRunner {
 
     private final UserRoleService userRoleService;
-
     private final AdminService adminService;
 
     public static void main(String[] args) {

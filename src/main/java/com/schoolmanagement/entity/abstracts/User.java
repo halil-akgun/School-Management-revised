@@ -14,6 +14,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 
 @MappedSuperclass // db'de olusacak child'larin tablolarinda buradaki fieldlar olussun
+// The fields in this class are created in the tables in the db of the entity classes that extend this class.
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

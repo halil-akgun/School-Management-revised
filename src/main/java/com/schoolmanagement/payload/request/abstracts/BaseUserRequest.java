@@ -53,11 +53,11 @@ public abstract class BaseUserRequest implements Serializable {
     private String birthPlace;
 
     @NotNull(message = "enter your password")
-    @Size(min = 8, max = 60, message = "your passwor should be at least 8 chars")
+    @Size(min = 8, max = 60, message = "your password should be at least 8 chars")
     private String password;
 
     @NotNull(message = "enter your phoneNumber")
-    @Size(min = 12, max = 12, message = "your passwor should be at exact 12 chars")
+    @Size(min = 12, max = 12, message = "your password should be at exact 12 chars")
     @Pattern(regexp = "^((\\(\\d{3}\\))|\\d{3})[- .]?\\d{3}[- .]?\\d{4}$",
             message = "Please enter valid phone number")
     private String phoneNumber;

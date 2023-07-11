@@ -8,6 +8,7 @@ import com.schoolmanagement.payload.response.AdminResponse;
 import com.schoolmanagement.payload.response.ResponseMessage;
 import com.schoolmanagement.repository.AdminRepository;
 import com.schoolmanagement.utils.FieldControl;
+import com.schoolmanagement.utils.Mapper;
 import com.schoolmanagement.utils.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -33,7 +34,7 @@ public class AdminService {
         fieldControl.checkDuplicate(adminRequest.getUsername(), adminRequest.getSsn(), adminRequest.getPhoneNumber());
 
 //        checkDuplicate(adminRequest.getUsername(), adminRequest.getSsn(), adminRequest.getPhoneNumber());
-        Admin admin = createAdminForSave(adminRequest);
+        Admin admin = Mapper.adminFromAdminRequest(adminRequest);
         admin.setBuilt_in(false);
 
         if (Objects.equals(adminRequest.getUsername(), "Admin")) admin.setBuilt_in(true);
@@ -48,7 +49,7 @@ public class AdminService {
         return ResponseMessage.<AdminResponse>builder()
                 .message("Admin saved")
                 .httpStatus(HttpStatus.CREATED)
-                .object(createResponse(savedData))
+                .object(Mapper.adminResponseFromAdmin(savedData))
                 .build();
 
     }
@@ -90,29 +91,6 @@ public class AdminService {
         }
 */
 
-    protected Admin createAdminForSave(AdminRequest request) {
-        return Admin.builder()
-                .username(request.getUsername())
-                .name(request.getName())
-                .surname(request.getSurname())
-                .birthday(request.getBirthDay())
-                .ssn(request.getSsn())
-                .birthPlace(request.getBirthPlace())
-                .password(request.getPassword())
-                .phoneNumber(request.getPhoneNumber())
-                .gender(request.getGender()).build();
-    }
-
-    private AdminResponse createResponse(Admin admin) {
-        return AdminResponse.builder()
-                .name(admin.getName())
-                .surname(admin.getSurname())
-                .gender(admin.getGender())
-                .userId(admin.getId())
-                .username(admin.getUsername())
-                .phoneNumber(admin.getPhoneNumber())
-                .build();
-    }
 
     public Page<Admin> getAllAdmin(Pageable pageable) {
         return adminRepository.findAll(pageable);

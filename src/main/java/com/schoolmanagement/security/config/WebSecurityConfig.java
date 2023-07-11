@@ -22,7 +22,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @EnableWebSecurity
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true) // method-level access control by role
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 // yeni Spring Security sürümlerinde (2.7.1 ve sonrasi) WebSecurityConfigurerAdapter'i extend etmek zorunlu değildir

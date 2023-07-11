@@ -5,6 +5,7 @@ import com.schoolmanagement.payload.request.ContactMessageRequest;
 import com.schoolmanagement.payload.response.ContactMessageResponse;
 import com.schoolmanagement.payload.response.ResponseMessage;
 import com.schoolmanagement.repository.ContactMessageRepository;
+import com.schoolmanagement.utils.Mapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,33 +35,15 @@ public class ContactMessageService {
 //            throw new ConflictException(String.format(ALREADY_SENT_A_MESSAGE_TODAY));
 
         //   DTO  -->  POJO
-        ContactMessage contactMessage = createObject(request);
+        ContactMessage contactMessage = Mapper.contactMessageFromContactMessageRequest(request);
         ContactMessage savedData = contactMessageRepository.save(contactMessage);
 
         return ResponseMessage.<ContactMessageResponse>builder()
                 .message("Contact message created successfully.")
                 .httpStatus(HttpStatus.CREATED)
-                .object(createResponse(savedData))
+                .object(Mapper.contactMessageResponseFromContactMessage(savedData))
                 .build();
 
-    }
-
-    private ContactMessage createObject(ContactMessageRequest contactMessageRequest) {
-        return ContactMessage.builder()
-                .name(contactMessageRequest.getName())
-                .email(contactMessageRequest.getEmail())
-                .subject(contactMessageRequest.getSubject())
-                .message(contactMessageRequest.getMessage())
-                .date(LocalDate.now()).build();
-    }
-
-    private ContactMessageResponse createResponse(ContactMessage contactMessage) {
-        return ContactMessageResponse.builder()
-                .name(contactMessage.getName())
-                .message(contactMessage.getMessage())
-                .email(contactMessage.getEmail())
-                .subject(contactMessage.getSubject())
-                .date(contactMessage.getDate()).build();
     }
 
     // ********************** getAll() **********************
@@ -78,7 +61,7 @@ public class ContactMessageService {
 //        }
 
 //        return contactMessageRepository.findAll(pageable).map(t-> createResponse(t));
-        return contactMessageRepository.findAll(pageable).map(this::createResponse); // kisa hali
+        return contactMessageRepository.findAll(pageable).map(Mapper::contactMessageResponseFromContactMessage); // kisa hali
     }
 
     // ********************** searchByEmail() **********************
@@ -93,7 +76,7 @@ public class ContactMessageService {
 //            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
 //        }
 
-        return contactMessageRepository.findByEmailEquals(email, pageable).map(this::createResponse);
+        return contactMessageRepository.findByEmailEquals(email, pageable).map(Mapper::contactMessageResponseFromContactMessage);
     }
 
     // ********************** searchBySubject() **********************
@@ -108,7 +91,7 @@ public class ContactMessageService {
 //            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
 //        }
 
-        return contactMessageRepository.findBySubjectEquals(subject, pageable).map(this::createResponse);
+        return contactMessageRepository.findBySubjectEquals(subject, pageable).map(Mapper::contactMessageResponseFromContactMessage);
 //        contactMessageRepository.findBySubjectLikeIgnoreCase("%" + subject + "%", pageable)
     }
 }

@@ -7,6 +7,7 @@ import com.schoolmanagement.exception.ResourceNotFoundException;
 import com.schoolmanagement.payload.response.AdvisorTeacherResponse;
 import com.schoolmanagement.payload.response.ResponseMessage;
 import com.schoolmanagement.repository.AdvisorTeacherRepository;
+import com.schoolmanagement.utils.Mapper;
 import com.schoolmanagement.utils.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -41,17 +42,9 @@ public class AdvisorTeacherService {
 
     public List<AdvisorTeacherResponse> getAll() {
         return advisorTeacherRepository.findAll().stream()
-                .map(this::createAdvisorTeacherResponse).collect(Collectors.toList());
+                .map(Mapper::advisorTeacherResponseFromAdvisorTeacher).collect(Collectors.toList());
     }
 
-    private AdvisorTeacherResponse createAdvisorTeacherResponse(AdvisorTeacher teacher) {
-        return AdvisorTeacherResponse.builder()
-                .teacherName(teacher.getTeacher().getName())
-                .teacherSurName(teacher.getTeacher().getSurname())
-                .teacherSsn(teacher.getTeacher().getSsn())
-                .advisorTeacherId(teacher.getId())
-                .build();
-    }
 
     public Page<AdvisorTeacherResponse> search(int page, int size, String sort, Sort.Direction type) {
 
@@ -61,7 +54,7 @@ public class AdvisorTeacherService {
 //            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
 //        else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
-        return advisorTeacherRepository.findAll(pageable).map(this::createAdvisorTeacherResponse);
+        return advisorTeacherRepository.findAll(pageable).map(Mapper::advisorTeacherResponseFromAdvisorTeacher);
     }
 
     //    teacherService 'te kullaniliyor

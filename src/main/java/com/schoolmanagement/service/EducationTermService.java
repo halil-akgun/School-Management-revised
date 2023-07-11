@@ -6,6 +6,7 @@ import com.schoolmanagement.payload.request.EducationTermRequest;
 import com.schoolmanagement.payload.response.EducationTermResponse;
 import com.schoolmanagement.payload.response.ResponseMessage;
 import com.schoolmanagement.repository.EducationTermRepository;
+import com.schoolmanagement.utils.Mapper;
 import com.schoolmanagement.utils.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -44,50 +45,31 @@ public class EducationTermService {
         }
 
         // !!! save metoduna dto- pojo donusumu yapip gonderiyoruz
-        EducationTerm savedEducationTerm = educationTermRepository.save(createEducationTerm(request));
+        EducationTerm savedEducationTerm = educationTermRepository.save(Mapper.educationTermFromEducationTermRequest(request));
 
         // !!! response objesi olusturuluyor
         return ResponseMessage.<EducationTermResponse>builder()
                 .message("Education Term created")
-                .object(createEducationTermResponse(savedEducationTerm))
+                .object(Mapper.educationTermResponseFromEducationTerm(savedEducationTerm))
                 .httpStatus(HttpStatus.CREATED)
                 .build();
     }
 
-    private EducationTerm createEducationTerm(EducationTermRequest request) {
-
-        return EducationTerm.builder()
-                .term(request.getTerm())
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .lastRegistrationDate(request.getLastRegistrationDate())
-                .build();
-    }
-
-    private EducationTermResponse createEducationTermResponse(EducationTerm response) {
-
-        return EducationTermResponse.builder()
-                .id(response.getId())
-                .term(response.getTerm())
-                .startDate(response.getStartDate())
-                .endDate(response.getEndDate())
-                .lastRegistrationDate(response.getLastRegistrationDate())
-                .build();
-    }
 
     public EducationTermResponse get(Long id) {
 
         if (!educationTermRepository.existsByIdEquals(id))
             throw new ResourceNotFoundException(String.format(Messages.EDUCATION_TERM_NOT_FOUND_MESSAGE, id));
-//        checkEducationTermExists(id);
 
-        return createEducationTermResponse(educationTermRepository.findByIdEquals(id));
+        // It's not nice, going to db 2 times.
+
+        return Mapper.educationTermResponseFromEducationTerm(educationTermRepository.findByIdEquals(id));
     }
 
     public List<EducationTermResponse> getAll() {
 
         return educationTermRepository.findAll()
-                .stream().map(this::createEducationTermResponse).collect(Collectors.toList());
+                .stream().map(Mapper::educationTermResponseFromEducationTerm).collect(Collectors.toList());
     }
 
     public Page<EducationTermResponse> getAllWithPage(int page, int size, String sort, Sort.Direction type) {
@@ -98,7 +80,7 @@ public class EducationTermService {
 //            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
 //        } else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
-        return educationTermRepository.findAll(pageable).map(this::createEducationTermResponse);
+        return educationTermRepository.findAll(pageable).map(Mapper::educationTermResponseFromEducationTerm);
     }
 
     public ResponseMessage<?> delete(Long id) {
@@ -138,23 +120,14 @@ public class EducationTermService {
         ResponseMessage.ResponseMessageBuilder<EducationTermResponse> responseMessageBuilder =
                 ResponseMessage.builder();
 
-        EducationTerm updatedEducationTerm = createUpdatedEducationTerm(id, request);
+        EducationTerm updatedEducationTerm = Mapper.updatedEducationTermFromEducationTermRequest(id, request);
         educationTermRepository.save(updatedEducationTerm);
 
-        return responseMessageBuilder.object(createEducationTermResponse(updatedEducationTerm))
+        return responseMessageBuilder.object(Mapper.educationTermResponseFromEducationTerm(updatedEducationTerm))
                 .message("EducationTerm updated.")
                 .build();
     }
 
-    private EducationTerm createUpdatedEducationTerm(Long id, EducationTermRequest request) {
-        return EducationTerm.builder()
-                .id(id)
-                .term(request.getTerm())
-                .startDate(request.getStartDate())
-                .lastRegistrationDate(request.getLastRegistrationDate())
-                .endDate(request.getEndDate())
-                .build();
-    }
 
     public EducationTerm getById(Long id) {
         return educationTermRepository.findById(id).orElseThrow(() ->

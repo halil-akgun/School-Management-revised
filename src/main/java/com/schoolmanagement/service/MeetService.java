@@ -12,6 +12,7 @@ import com.schoolmanagement.payload.response.MeetResponse;
 import com.schoolmanagement.payload.response.ResponseMessage;
 import com.schoolmanagement.repository.MeetRepository;
 import com.schoolmanagement.repository.StudentRepository;
+import com.schoolmanagement.utils.Mapper;
 import com.schoolmanagement.utils.Messages;
 import com.schoolmanagement.utils.TimeControl;
 import lombok.RequiredArgsConstructor;
@@ -80,7 +81,7 @@ public class MeetService {
         return ResponseMessage.<MeetResponse>builder()
                 .message("Meet saved.")
                 .httpStatus(HttpStatus.CREATED)
-                .object(createMeetResponse(savedMeet)).build();
+                .object(Mapper.meetResponseFromMeet(savedMeet)).build();
     }
 
     private void checkMeetConflict(List<Meet> meets, LocalDate date, LocalTime startTime, LocalTime stopTime) {
@@ -98,22 +99,9 @@ public class MeetService {
         }
     }
 
-    private MeetResponse createMeetResponse(Meet meet) {
-        return MeetResponse.builder()
-                .id(meet.getId())
-                .date(meet.getDate())
-                .startTime(meet.getStartTime())
-                .stopTime(meet.getStopTime())
-                .description(meet.getDescription())
-                .advisorTeacherId(meet.getAdvisorTeacher().getId())
-                .teacherSsn(meet.getAdvisorTeacher().getTeacher().getSsn())
-                .teacherName(meet.getAdvisorTeacher().getTeacher().getName())
-                .students(meet.getStudentList())
-                .build();
-    }
 
     public List<MeetResponse> getAll() {
-        return meetRepository.findAll().stream().map(this::createMeetResponse).collect(Collectors.toList());
+        return meetRepository.findAll().stream().map(Mapper::meetResponseFromMeet).collect(Collectors.toList());
     }
 
     public ResponseMessage<MeetResponse> getMeetById(Long id) {
@@ -122,7 +110,7 @@ public class MeetService {
         return ResponseMessage.<MeetResponse>builder()
                 .message("Meet found")
                 .httpStatus(HttpStatus.OK)
-                .object(createMeetResponse(meet)).build();
+                .object(Mapper.meetResponseFromMeet(meet)).build();
     }
 
     public Page<MeetResponse> getAllMeetByAdvisorTeacherAsPage(String username, Pageable pageable) {
@@ -130,7 +118,7 @@ public class MeetService {
                 new ResourceNotFoundException(String.format(Messages.NOT_FOUND_ADVISOR_MESSAGE_WITH_USERNAME, username)));
 
         return meetRepository.findByAdvisorTeacher_IdEquals(advisorTeacher.getId(), pageable)
-                .map(this::createMeetResponse);
+                .map(Mapper::meetResponseFromMeet);
     }
 
     public List<MeetResponse> getAllMeetByAdvisorTeacherAsList(String username) {
@@ -138,7 +126,7 @@ public class MeetService {
                 new ResourceNotFoundException(String.format(Messages.NOT_FOUND_ADVISOR_MESSAGE_WITH_USERNAME, username)));
 
         return meetRepository.getByAdvisorTeacher_IdEquals(advisorTeacher.getId()).stream()
-                .map(this::createMeetResponse).collect(Collectors.toList());
+                .map(Mapper::meetResponseFromMeet).collect(Collectors.toList());
     }
 
     public ResponseMessage<?> delete(Long id) {
@@ -185,7 +173,7 @@ public class MeetService {
         List<Student> students = studentService.getStudentByIds(request.getStudentIds());
 
 //        DTO --> POJO
-        Meet updatedMeet = createUpdatedMeet(request, id);
+        Meet updatedMeet = Mapper.meetFromUpdateMeetRequest(request, id);
         updatedMeet.setStudentList(students);
         updatedMeet.setAdvisorTeacher(oldMeet.getAdvisorTeacher());
 
@@ -194,17 +182,7 @@ public class MeetService {
         return ResponseMessage.<MeetResponse>builder()
                 .message("Meet updated.")
                 .httpStatus(HttpStatus.OK)
-                .object(createMeetResponse(savedMeet)).build();
-    }
-
-    private Meet createUpdatedMeet(UpdateMeetRequest request, Long id) {
-        return Meet.builder()
-                .id(id)
-                .startTime(request.getStartTime())
-                .stopTime(request.getStopTime())
-                .date(request.getDate())
-                .description(request.getDescription())
-                .build();
+                .object(Mapper.meetResponseFromMeet(savedMeet)).build();
     }
 
     public List<MeetResponse> getAllMeetByStudentByUsername(String username) {
@@ -212,11 +190,11 @@ public class MeetService {
                 new ResourceNotFoundException(Messages.NOT_FOUND_USER_MESSAGE));
 
         return meetRepository.findByStudentList_IdEquals(student.getId()).stream()
-                .map(this::createMeetResponse).collect(Collectors.toList());
+                .map(Mapper::meetResponseFromMeet).collect(Collectors.toList());
     }
 
     public Page<MeetResponse> getAllMeetWithPage(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        return meetRepository.findAll(pageable).map(this::createMeetResponse);
+        return meetRepository.findAll(pageable).map(Mapper::meetResponseFromMeet);
     }
 }

@@ -10,6 +10,7 @@ import com.schoolmanagement.payload.response.ResponseMessage;
 import com.schoolmanagement.repository.DeanRepository;
 import com.schoolmanagement.utils.CheckParameterUpdateMethod;
 import com.schoolmanagement.utils.FieldControl;
+import com.schoolmanagement.utils.Mapper;
 import com.schoolmanagement.utils.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -51,7 +52,7 @@ public class DeanService {
         return ResponseMessage.<DeanResponse>builder()
                 .message("Dean saved.")
                 .httpStatus(HttpStatus.CREATED)
-                .object(createDeanResponse(savedDean))
+                .object(Mapper.deanResponseFromDean(savedDean))
                 .build();
 
     }
@@ -60,19 +61,6 @@ public class DeanService {
         return deanDto.dtoDean(deanRequest);
     }
 
-    private DeanResponse createDeanResponse(Dean dean) {
-        return DeanResponse.builder()
-                .name(dean.getName())
-                .surname(dean.getSurname())
-                .userId(dean.getId())
-                .username(dean.getUsername())
-                .ssn(dean.getSsn())
-                .birthday(dean.getBirthday())
-                .birthPlace(dean.getBirthPlace())
-                .phoneNumber(dean.getPhoneNumber())
-                .gender(dean.getGender())
-                .build();
-    }
 
     public ResponseMessage<DeanResponse> update(DeanRequest request, Long userId) {
 
@@ -90,31 +78,17 @@ public class DeanService {
         }
 
 
-        Dean updatedDean = createUpdatedDean(request, userId);
+        Dean updatedDean = Mapper.deanFromDeanRequest(request, userId);
         updatedDean.setPassword(passwordEncoder.encode(request.getPassword()));
+        updatedDean.setUserRole(userRoleService.getUserRole(RoleType.MANAGER));
 
         deanRepository.save(updatedDean);
 
         return ResponseMessage.<DeanResponse>builder()
                 .message("Dean updated successfully")
                 .httpStatus(HttpStatus.OK)
-                .object(createDeanResponse(updatedDean)).build();
+                .object(Mapper.deanResponseFromDean(updatedDean)).build();
 
-    }
-
-    private Dean createUpdatedDean(DeanRequest deanRequest, Long deanId) {
-        return Dean.builder()
-                .id(deanId)
-                .username(deanRequest.getUsername())
-                .ssn(deanRequest.getSsn())
-                .phoneNumber(deanRequest.getPhoneNumber())
-                .gender(deanRequest.getGender())
-                .birthPlace(deanRequest.getBirthPlace())
-                .name(deanRequest.getName())
-                .surname(deanRequest.getSurname())
-                .birthday(deanRequest.getBirthDay())
-                .userRole(userRoleService.getUserRole(RoleType.MANAGER))
-                .build();
     }
 
     public ResponseMessage<DeanResponse> delete(Long userId) {
@@ -139,11 +113,11 @@ public class DeanService {
         return ResponseMessage.<DeanResponse>builder()
                 .message("Dean successfully found")
                 .httpStatus(HttpStatus.OK)
-                .object(createDeanResponse(dean.get())).build();
+                .object(Mapper.deanResponseFromDean(dean.get())).build();
     }
 
     public List<DeanResponse> getAllDean() {
-        return deanRepository.findAll().stream().map(this::createDeanResponse).collect(Collectors.toList());
+        return deanRepository.findAll().stream().map(Mapper::deanResponseFromDean).collect(Collectors.toList());
     }
 
     public Page<DeanResponse> search(int page, int size, String sort, Sort.Direction type) {
@@ -154,7 +128,7 @@ public class DeanService {
 //            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
 //        } else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
-        return deanRepository.findAll(pageable).map(this::createDeanResponse);
+        return deanRepository.findAll(pageable).map(Mapper::deanResponseFromDean);
     }
 
     private Optional<Dean> checkDeanExists(Long id) { // to avoid code repeat

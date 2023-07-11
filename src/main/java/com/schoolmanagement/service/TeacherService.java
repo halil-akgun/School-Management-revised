@@ -14,6 +14,7 @@ import com.schoolmanagement.payload.response.TeacherResponse;
 import com.schoolmanagement.repository.TeacherRepository;
 import com.schoolmanagement.utils.CheckSameLessonProgram;
 import com.schoolmanagement.utils.FieldControl;
+import com.schoolmanagement.utils.Mapper;
 import com.schoolmanagement.utils.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -64,7 +65,7 @@ public class TeacherService {
             return ResponseMessage.<TeacherResponse>builder()
                     .message("teacher created.")
                     .httpStatus(HttpStatus.CREATED)
-                    .object(createTeacherResponse(savedData)).build();
+                    .object(Mapper.teacherResponseFromTeacher(savedData)).build();
         }
 
     }
@@ -73,23 +74,8 @@ public class TeacherService {
         return teacherRequestDto.createTeacher(request);
     }
 
-    private TeacherResponse createTeacherResponse(Teacher teacher) {
-        return TeacherResponse.builder()
-                .userId(teacher.getId())
-                .username(teacher.getUsername())
-                .name(teacher.getName())
-                .surname(teacher.getSurname())
-                .phoneNumber(teacher.getPhoneNumber())
-                .email(teacher.getEmail())
-                .birthPlace(teacher.getBirthPlace())
-                .birthday(teacher.getBirthday())
-                .ssn(teacher.getSsn())
-                .gender(teacher.getGender())
-                .build();
-    }
-
     public List<TeacherResponse> getAllTeacher() {
-        return teacherRepository.findAll().stream().map(this::createTeacherResponse).collect(Collectors.toList());
+        return teacherRepository.findAll().stream().map(Mapper::teacherResponseFromTeacher).collect(Collectors.toList());
     }
 
     public ResponseMessage<TeacherResponse> update(Long id, TeacherRequest request) {
@@ -105,7 +91,8 @@ public class TeacherService {
             fieldControl.checkDuplicate(request.getUsername(), request.getSsn(),
                     request.getPhoneNumber(), request.getEmail());
 
-        Teacher updatedTeacher = createUpdatedTeacher(request, id);
+        Teacher updatedTeacher = Mapper.teacherFromTeacherRequest(request, id);
+        updatedTeacher.setUserRole(userRoleService.getUserRole(RoleType.TEACHER));
         updatedTeacher.setPassword(passwordEncoder.encode(request.getPassword()));
         updatedTeacher.setLessonsProgramList(lessons);
 
@@ -116,24 +103,7 @@ public class TeacherService {
         return ResponseMessage.<TeacherResponse>builder()
                 .message("teacher updated")
                 .httpStatus(HttpStatus.OK)
-                .object(createTeacherResponse(savedData)).build();
-    }
-
-    private Teacher createUpdatedTeacher(TeacherRequest request, Long id) {
-        return Teacher.builder()
-                .name(request.getName())
-                .surname(request.getSurname())
-                .username(request.getUsername())
-                .ssn(request.getSsn())
-                .phoneNumber(request.getPhoneNumber())
-                .birthPlace(request.getBirthPlace())
-                .birthday(request.getBirthDay())
-                .gender(request.getGender())
-                .id(id)
-                .isAdvisor(request.isAdviser())
-                .userRole(userRoleService.getUserRole(RoleType.TEACHER))
-                .email(request.getEmail())
-                .build();
+                .object(Mapper.teacherResponseFromTeacher(savedData)).build();
     }
 
     private boolean checkParameterForUpdateMethod(Teacher teacher, TeacherRequest newTeacherRequest) {
@@ -145,7 +115,7 @@ public class TeacherService {
 
     public List<TeacherResponse> getTeacherByName(String teacherName) {
         return teacherRepository.getTeacherByNameContaining(teacherName).stream()
-                .map(this::createTeacherResponse).collect(Collectors.toList());
+                .map(Mapper::teacherResponseFromTeacher).collect(Collectors.toList());
     }
 
     public ResponseMessage deleteTeacher(Long id) {
@@ -167,7 +137,7 @@ public class TeacherService {
         return ResponseMessage.<TeacherResponse>builder()
                 .message("teacher found")
                 .httpStatus(HttpStatus.OK)
-                .object(createTeacherResponse(teacher)).build();
+                .object(Mapper.teacherResponseFromTeacher(teacher)).build();
     }
 
     public Page<TeacherResponse> getAllWithPage(int page, int size, String sort, Sort.Direction type) {
@@ -178,7 +148,7 @@ public class TeacherService {
 //            pageable = PageRequest.of(page, size, Sort.by(sort).descending());
 //        } else pageable = PageRequest.of(page, size, Sort.by(sort).ascending());
 
-        return teacherRepository.findAll(pageable).map(this::createTeacherResponse);
+        return teacherRepository.findAll(pageable).map(Mapper::teacherResponseFromTeacher);
     }
 
     public ResponseMessage<TeacherResponse> chooseLesson(ChooseLessonTeacherRequest request) {
@@ -203,7 +173,7 @@ public class TeacherService {
         return ResponseMessage.<TeacherResponse>builder()
                 .message("Lesson Program added to the teacher.")
                 .httpStatus(HttpStatus.OK)
-                .object(createTeacherResponse(savedData)).build();
+                .object(Mapper.teacherResponseFromTeacher(savedData)).build();
     }
 
     //    StudentInfo Service icin eklendi

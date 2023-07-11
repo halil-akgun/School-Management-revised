@@ -17,6 +17,6 @@ import javax.persistence.Table;
 @SuperBuilder
 public class Admin extends User {
 
-    private boolean built_in; // silinememesi icin
+    private boolean built_in; // so that it cannot be deleted
 
 }

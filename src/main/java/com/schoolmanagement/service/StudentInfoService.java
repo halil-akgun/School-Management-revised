@@ -10,6 +10,7 @@ import com.schoolmanagement.payload.response.ResponseMessage;
 import com.schoolmanagement.payload.response.StudentInfoResponse;
 import com.schoolmanagement.payload.response.StudentResponse;
 import com.schoolmanagement.repository.StudentInfoRepository;
+import com.schoolmanagement.utils.Mapper;
 import com.schoolmanagement.utils.Messages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,7 +57,7 @@ public class StudentInfoService {
         Note note = checkLetterGrade(noteAverage);
 
 //        DTO --> POJO
-        StudentInfo studentInfo = createStudentInfo(request, note, noteAverage);
+        StudentInfo studentInfo = Mapper.studentInfoFromStudentInfoRequestWithoutTeacherId(request, note, noteAverage);
 //        requestte sadece id'ler vardi, yukarida elde ettigimiz objeleri setliyoruz:
         studentInfo.setStudent(student);
         studentInfo.setTeacher(teacher);
@@ -68,7 +69,7 @@ public class StudentInfoService {
         return ResponseMessage.<StudentInfoResponse>builder()
                 .message("StudentInfo saved.")
                 .httpStatus(HttpStatus.CREATED)
-                .object(createStudentInfoResponse(savedStudentInfo)).build();
+                .object(Mapper.studentInfoResponseFromStudentInfo(savedStudentInfo)).build();
     }
 
     private boolean checkSameLesson(Long studentId, String lessonName) {
@@ -90,52 +91,6 @@ public class StudentInfoService {
         else if (average < 75) return Note.BB;
         else if (average < 80) return Note.BA;
         else return Note.AA;
-    }
-
-    private StudentInfo createStudentInfo(StudentInfoRequestWithoutTeacherId request, Note note, Double average) {
-        return StudentInfo.builder()
-                .infoNote(request.getInfoNote())
-                .absentee(request.getAbsentee())
-                .midtermExam(request.getMidTermExam())
-                .finalExam(request.getFinalExam())
-                .examAverage(average)
-                .letterGrade(note)
-                .build();
-    }
-
-    private StudentInfoResponse createStudentInfoResponse(StudentInfo studentInfo) {
-        return StudentInfoResponse.builder()
-                .lessonName(studentInfo.getLesson().getLessonName())
-                .creditScore(studentInfo.getLesson().getCreditScore())
-                .isCompulsory(studentInfo.getLesson().getIsCompulsory())
-                .educationTerm(studentInfo.getEducationTerm().getTerm())
-                .id(studentInfo.getId())
-                .absentee(studentInfo.getAbsentee())
-                .midTermExam(studentInfo.getMidtermExam())
-                .finalExam(studentInfo.getFinalExam())
-                .infoNote(studentInfo.getInfoNote())
-                .note(studentInfo.getLetterGrade())
-                .average(studentInfo.getExamAverage())
-                .studentResponse(createStudentResponse(studentInfo.getStudent()))
-                .build();
-    }
-
-    public StudentResponse createStudentResponse(Student student) {
-        return StudentResponse.builder()
-                .userId(student.getId())
-                .username(student.getUsername())
-                .name(student.getName())
-                .surname(student.getSurname())
-                .birthPlace(student.getBirthPlace())
-                .birthday(student.getBirthday())
-                .phoneNumber(student.getPhoneNumber())
-                .gender(student.getGender())
-                .email(student.getEmail())
-                .motherName(student.getMotherName())
-                .fatherName(student.getFatherName())
-                .isActive(student.isActive())
-                .studentNumber(student.getStudentNumber())
-                .build();
     }
 
     public ResponseMessage<?> delete(Long id) {
@@ -163,7 +118,7 @@ public class StudentInfoService {
 //        alfabetik not:
         Note note = checkLetterGrade(noteAverage);
 
-        StudentInfo studentInfo = createUpdatedStudent(request, id, lesson, educationTerm, note, noteAverage);
+        StudentInfo studentInfo = Mapper.studentInfoFromUpdateStudentInfoRequest(request, id, lesson, educationTerm, note, noteAverage);
         studentInfo.setStudent(oldStudentInfo.getStudent());
         studentInfo.setTeacher(oldStudentInfo.getTeacher());
 
@@ -172,7 +127,7 @@ public class StudentInfoService {
         return ResponseMessage.<StudentInfoResponse>builder()
                 .message("StudentInfo updated")
                 .httpStatus(HttpStatus.OK)
-                .object(createStudentInfoResponse(updatedStudentInfo)).build();
+                .object(Mapper.studentInfoResponseFromStudentInfo(updatedStudentInfo)).build();
     }
 
     private StudentInfo getStudentInfoById(Long id) {
@@ -180,30 +135,15 @@ public class StudentInfoService {
                 new ResourceNotFoundException(String.format(Messages.STUDENT_INFO_NOT_FOUND, id)));
     }
 
-    private StudentInfo createUpdatedStudent(UpdateStudentInfoRequest request, Long studentInfoRequestId,
-                                             Lesson lesson, EducationTerm educationTerm, Note note, double average) {
-        return StudentInfo.builder()
-                .id(studentInfoRequestId)
-                .infoNote(request.getInfoNote())
-                .midtermExam(request.getMidTermExam())
-                .finalExam(request.getFinalExam())
-                .absentee(request.getAbsentee())
-                .lesson(lesson)
-                .educationTerm(educationTerm)
-                .examAverage(average)
-                .letterGrade(note)
-                .build();
-    }
-
     public Page<StudentInfoResponse> getAllForAdmin(Pageable pageable) {
-        return studentInfoRepository.findAll(pageable).map(this::createStudentInfoResponse);
+        return studentInfoRepository.findAll(pageable).map(Mapper::studentInfoResponseFromStudentInfo);
     }
 
     public Page<StudentInfoResponse> getAllForTeacher(Pageable pageable, String username) {
         if (!teacherService.existsByUsername(username))
             throw new ResourceNotFoundException(Messages.NOT_FOUND_USER_MESSAGE);
         return studentInfoRepository.findByTeacherId_UsernameEquals(username, pageable)
-                .map(this::createStudentInfoResponse);
+                .map(Mapper::studentInfoResponseFromStudentInfo);
     }
 
 
@@ -211,7 +151,7 @@ public class StudentInfoService {
         if (!studentService.existsByUsername(username))
             throw new ResourceNotFoundException(Messages.NOT_FOUND_USER_MESSAGE);
         return studentInfoRepository.findByStudentId_UsernameEquals(username, pageable)
-                .map(this::createStudentInfoResponse);
+                .map(Mapper::studentInfoResponseFromStudentInfo);
     }
 
     public List<StudentInfoResponse> getStudentInfoByStudentId(Long id) {
@@ -222,16 +162,16 @@ public class StudentInfoService {
             throw new ResourceNotFoundException(String.format(Messages.STUDENT_INFO_NOT_FOUND_BY_STUDENT_ID, id));
 
         return studentInfoRepository.findByStudent_IdEquals(id).stream()
-                .map(this::createStudentInfoResponse).collect(Collectors.toList());
+                .map(Mapper::studentInfoResponseFromStudentInfo).collect(Collectors.toList());
     }
 
     public StudentInfoResponse findStudentInfoById(Long id) {
-        return createStudentInfoResponse(studentInfoRepository.findById(id).orElseThrow(() ->
+        return Mapper.studentInfoResponseFromStudentInfo(studentInfoRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException(String.format(Messages.STUDENT_INFO_NOT_FOUND, id))));
     }
 
     public Page<StudentInfoResponse> getAllWithPage(int page, int size, String sort, Sort.Direction type) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(type, sort));
-        return studentInfoRepository.findAll(pageable).map(this::createStudentInfoResponse);
+        return studentInfoRepository.findAll(pageable).map(Mapper::studentInfoResponseFromStudentInfo);
     }
 }
