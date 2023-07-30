@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.PositiveOrZero;
 import java.io.Serializable;
 import java.util.Set;
 
@@ -22,6 +23,7 @@ public class Lesson implements Serializable {
 
     private String lessonName;
 
+    @PositiveOrZero(message = "Credit score must be a non-negative value")
     private Integer creditScore;
 
     private Boolean isCompulsory; // zorunlu mu
